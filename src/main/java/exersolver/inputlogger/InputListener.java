@@ -1,0 +1,156 @@
+package exersolver.inputlogger;
+
+import com.github.kwhat.jnativehook.GlobalScreen;
+import com.github.kwhat.jnativehook.NativeHookException;
+import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
+import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
+import com.github.kwhat.jnativehook.mouse.NativeMouseEvent;
+import com.github.kwhat.jnativehook.mouse.NativeMouseInputListener;
+import com.github.kwhat.jnativehook.mouse.NativeMouseWheelEvent;
+import com.github.kwhat.jnativehook.mouse.NativeMouseWheelListener;
+import exersolver.inputlogger.output.BufferedCryptoZipWriter;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.options.KeyBinding;
+
+import java.io.IOException;
+import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+public class InputListener implements NativeMouseInputListener, NativeMouseWheelListener, NativeKeyListener {
+    private static BufferedCryptoZipWriter fileWriter = null;
+
+    public static void setFileWriter(BufferedCryptoZipWriter fileWriterIn) {
+        if (fileWriter != null) {
+            try {
+                fileWriter.close();
+            } catch (IOException e) {
+                InputLogger.LOGGER.error(e.getMessage(), e);
+            }
+        }
+        fileWriter = fileWriterIn;
+
+        fileWriter.log(System.nanoTime(), "Created log file");
+        fileWriter.log("Operating system: " + System.getProperty("os.name").toLowerCase(Locale.ROOT));
+        fileWriter.log("Key repeat rate: " + System.getProperty("jnativehook.key.repeat.rate"));
+        fileWriter.log("Key repeat delay: " + System.getProperty("jnativehook.key.repeat.delay"));
+
+        KeyBinding[] keyMappings = MinecraftClient.getInstance().options.keysAll;
+        for (KeyBinding keyMapping : keyMappings) {
+            fileWriter.log(keyMapping.getTranslationKey() + ":" + keyMapping.getBoundKeyTranslationKey());
+        }
+    }
+
+    public static void init() {
+        Logger.getLogger(GlobalScreen.class.getPackage().getName()).setUseParentHandlers(false);
+        Logger.getLogger(GlobalScreen.class.getPackage().getName()).setLevel(Level.OFF);
+
+        try {
+            GlobalScreen.registerNativeHook();
+        } catch (NativeHookException e) {
+            InputLogger.LOGGER.error(e.getMessage(), e);
+        }
+
+        GlobalScreen.addNativeMouseMotionListener(new InputListener());
+        GlobalScreen.addNativeMouseListener(new InputListener());
+        GlobalScreen.addNativeMouseWheelListener(new InputListener());
+        GlobalScreen.addNativeKeyListener(new InputListener());
+    }
+
+    public static void closeFileWriter() {
+        if (fileWriter == null || fileWriter.closed)
+            return;
+
+        try {
+            fileWriter.close();
+            String hash = fileWriter.getHashHex();
+            InputLogger.LOGGER.info(InputLogger.MOD_ID + " hash: " + hash);
+        } catch (IOException e) {
+            InputLogger.LOGGER.error(e.getMessage(), e);
+        }
+    }
+
+    public static BufferedCryptoZipWriter getFileWriter() {
+        return fileWriter;
+    }
+
+    public static void onFocusChanged(boolean focused) {
+        long time = System.nanoTime();
+        if (fileWriter == null)
+            return;
+
+        fileWriter.log(time, String.format("focused %b", focused));
+    }
+
+    @Override
+    public void nativeMouseMoved(NativeMouseEvent nativeMouseEvent) {
+        long time = System.nanoTime();
+        if (fileWriter == null || !MinecraftClient.getInstance().isWindowFocused())
+            return;
+
+        fileWriter.log(time, String.format("cursor %d %d", nativeMouseEvent.getX(), nativeMouseEvent.getY()));
+    }
+
+    @Override
+    public void nativeMouseDragged(NativeMouseEvent nativeMouseEvent) {
+        long time = System.nanoTime();
+        if (fileWriter == null || !MinecraftClient.getInstance().isWindowFocused())
+            return;
+
+        fileWriter.log(time, String.format("cursor %d %d", nativeMouseEvent.getX(), nativeMouseEvent.getY()));
+    }
+
+    @Override
+    public void nativeMousePressed(NativeMouseEvent nativeMouseEvent) {
+        long time = System.nanoTime();
+        if (fileWriter == null || !MinecraftClient.getInstance().isWindowFocused())
+            return;
+
+        fileWriter.log(time, String.format("mouseButton pressed %d", nativeMouseEvent.getButton()));
+    }
+
+    @Override
+    public void nativeMouseReleased(NativeMouseEvent nativeMouseEvent) {
+        long time = System.nanoTime();
+        if (fileWriter == null || !MinecraftClient.getInstance().isWindowFocused())
+            return;
+
+        fileWriter.log(time, String.format("mouseButton released %d", nativeMouseEvent.getButton()));
+    }
+
+    @Override
+    public void nativeMouseWheelMoved(NativeMouseWheelEvent nativeMouseWheelEvent) {
+        long time = System.nanoTime();
+        if (fileWriter == null || !MinecraftClient.getInstance().isWindowFocused())
+            return;
+
+        fileWriter.log(time, String.format("mouseWheel scrolled %d", nativeMouseWheelEvent.getWheelRotation()));
+    }
+
+    @Override
+    public void nativeKeyTyped(NativeKeyEvent nativeKeyEvent) {
+        long time = System.nanoTime();
+        if (fileWriter == null || !MinecraftClient.getInstance().isWindowFocused())
+            return;
+
+        fileWriter.log(time, String.format("key typed %c [%d] (%d,%d)", nativeKeyEvent.getKeyChar(), nativeKeyEvent.getModifiers(), (int) nativeKeyEvent.getKeyChar(), nativeKeyEvent.getRawCode()));
+    }
+
+    @Override
+    public void nativeKeyPressed(NativeKeyEvent nativeKeyEvent) {
+        long time = System.nanoTime();
+        if (fileWriter == null || !MinecraftClient.getInstance().isWindowFocused())
+            return;
+
+        fileWriter.log(time, String.format("key pressed \"%s\" [%d] (%d)", NativeKeyEvent.getKeyText(nativeKeyEvent.getKeyCode()), nativeKeyEvent.getModifiers(), nativeKeyEvent.getRawCode()));
+    }
+
+    @Override
+    public void nativeKeyReleased(NativeKeyEvent nativeKeyEvent) {
+        long time = System.nanoTime();
+        if (fileWriter == null || !MinecraftClient.getInstance().isWindowFocused())
+            return;
+
+        fileWriter.log(time, String.format("key released \"%s\" [%d] (%d)", NativeKeyEvent.getKeyText(nativeKeyEvent.getKeyCode()), nativeKeyEvent.getModifiers(), nativeKeyEvent.getRawCode()));
+    }
+}
