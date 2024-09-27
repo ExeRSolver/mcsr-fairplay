@@ -4,7 +4,7 @@ import exersolver.inputlogger.InputListener;
 import exersolver.inputlogger.output.OutputUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.util.registry.RegistryTracker;
+import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.world.gen.GeneratorOptions;
 import net.minecraft.world.level.LevelInfo;
 import org.jetbrains.annotations.Nullable;
@@ -20,8 +20,8 @@ public abstract class MinecraftClientMixin {
 	@Nullable
 	public ClientWorld world;
 
-	@Inject(at = @At("HEAD"), method = "method_29607")
-	public void onCreate(String worldName, LevelInfo levelInfo, RegistryTracker.Modifiable registryTracker, GeneratorOptions generatorOptions, CallbackInfo ci) {
+	@Inject(at = @At("HEAD"), method = "createWorld")
+	public void onCreate(String worldName, LevelInfo levelInfo, DynamicRegistryManager.Impl registryTracker, GeneratorOptions generatorOptions, CallbackInfo ci) {
 		if (MinecraftClient.getInstance().isOnThread())
 			OutputUtils.setFileWriter(worldName);
     }

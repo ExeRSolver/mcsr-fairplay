@@ -5,7 +5,7 @@ import exersolver.inputlogger.InputListener;
 import net.minecraft.client.gui.screen.SaveLevelScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.StringRenderable;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import org.spongepowered.asm.mixin.Mixin;
@@ -34,6 +34,6 @@ public abstract class SaveLevelScreenMixin extends Screen {
         if (hash == null)
             return;
 
-        this.drawCenteredText(matrices, this.textRenderer, StringRenderable.plain(hash), this.width / 2, 90, 16777215);
+        drawCenteredText(matrices, this.textRenderer, new LiteralText(hash), this.width / 2, 90, 16777215);
     }
 }

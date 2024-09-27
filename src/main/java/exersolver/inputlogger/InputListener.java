@@ -10,7 +10,7 @@ import com.github.kwhat.jnativehook.mouse.NativeMouseWheelEvent;
 import com.github.kwhat.jnativehook.mouse.NativeMouseWheelListener;
 import exersolver.inputlogger.output.BufferedCryptoZipWriter;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.option.KeyBinding;
 
 import java.io.IOException;
 import java.util.Locale;
