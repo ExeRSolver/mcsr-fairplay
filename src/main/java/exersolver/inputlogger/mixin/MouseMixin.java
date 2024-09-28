@@ -16,12 +16,12 @@ public abstract class MouseMixin {
     @Inject(method = "lockCursor",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/InputUtil;setCursorParameters(JIDD)V"))
     private void onCursorLock(CallbackInfo ci) {
-        InputListener.onCursorLockChanged(true, this.getX(), this.getY());
+        InputListener.onCursorLockChanged(true, (int) this.getX(), (int) this.getY());
     }
 
     @Inject(method = "unlockCursor",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/InputUtil;setCursorParameters(JIDD)V"))
     private void onCursorUnlock(CallbackInfo ci) {
-        InputListener.onCursorLockChanged(false, this.getX(), this.getY());
+        InputListener.onCursorLockChanged(false, (int) this.getX(), (int) this.getY());
     }
 }
