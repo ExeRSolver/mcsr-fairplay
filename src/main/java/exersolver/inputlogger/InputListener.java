@@ -99,6 +99,14 @@ public class InputListener implements NativeMouseInputListener, NativeMouseWheel
         fileWriter.log(time, String.format("window size %d %d", width, height));
     }
 
+    public static void onCursorLockChanged(boolean locked, double x, double y) {
+        long time = System.nanoTime();
+        if (fileWriter == null)
+            return;
+
+        fileWriter.log(time, String.format("cursor %s %.1f %.1f", locked ? "locked" : "unlocked", x, y));
+    }
+
     @Override
     public void nativeMouseMoved(NativeMouseEvent nativeMouseEvent) {
         long time = System.nanoTime();
