@@ -39,6 +39,7 @@ public class InputListener implements NativeMouseInputListener, NativeMouseWheel
         for (KeyBinding keyMapping : keyMappings) {
             fileWriter.log(keyMapping.getTranslationKey() + ":" + keyMapping.getBoundKeyTranslationKey());
         }
+        fileWriter.log("LOG START");
     }
 
     public static void init() {
@@ -80,6 +81,30 @@ public class InputListener implements NativeMouseInputListener, NativeMouseWheel
             return;
 
         fileWriter.log(time, String.format("focused %b", focused));
+    }
+
+    public static void onWindowPosChanged(int x, int y) {
+        long time = System.nanoTime();
+        if (fileWriter == null)
+            return;
+
+        fileWriter.log(time, String.format("window pos %d %d", x, y));
+    }
+
+    public static void onWindowSizeChanged(int width, int height) {
+        long time = System.nanoTime();
+        if (fileWriter == null)
+            return;
+
+        fileWriter.log(time, String.format("window size %d %d", width, height));
+    }
+
+    public static void onCursorLockChanged(boolean locked, int x, int y) {
+        long time = System.nanoTime();
+        if (fileWriter == null)
+            return;
+
+        fileWriter.log(time, String.format("cursor %s %d %d", locked ? "locked" : "unlocked", x, y));
     }
 
     @Override
