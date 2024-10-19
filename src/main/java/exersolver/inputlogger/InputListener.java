@@ -11,6 +11,7 @@ import com.github.kwhat.jnativehook.mouse.NativeMouseWheelListener;
 import exersolver.inputlogger.output.BufferedCryptoZipWriter;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.util.Window;
 
 import java.io.IOException;
 import java.util.Locale;
@@ -32,6 +33,11 @@ public class InputListener implements NativeMouseInputListener, NativeMouseWheel
 
         fileWriter.log(System.nanoTime(), "Created log file");
         fileWriter.log("Operating system: " + System.getProperty("os.name").toLowerCase(Locale.ROOT));
+
+        Window window = MinecraftClient.getInstance().getWindow();
+        fileWriter.log(String.format("window pos %d %d", window.getX(), window.getY()));
+        fileWriter.log(String.format("window size %d %d", window.getWidth(), window.getHeight()));
+
         fileWriter.log("Key repeat rate: " + System.getProperty("jnativehook.key.repeat.rate"));
         fileWriter.log("Key repeat delay: " + System.getProperty("jnativehook.key.repeat.delay"));
 
