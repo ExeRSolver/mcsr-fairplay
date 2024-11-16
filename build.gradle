@@ -24,6 +24,11 @@ dependencies {
 
 	// https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on
 	implementation include(group: 'org.bouncycastle', name: 'bcprov-jdk18on', version: '1.78.1')
+
+	// https://mvnrepository.com/artifact/net.java.dev.jna/jna
+	implementation include(group: 'net.java.dev.jna', name: 'jna', version: '5.15.0')
+	// https://mvnrepository.com/artifact/net.java.dev.jna/jna-platform
+	implementation include(group: 'net.java.dev.jna', name: 'jna-platform', version: '5.15.0')
 }
 
 processResources {

@@ -2,15 +2,19 @@ package exersolver.inputlogger;
 
 import com.github.kwhat.jnativehook.GlobalScreen;
 import com.github.kwhat.jnativehook.NativeHookException;
+import com.github.kwhat.jnativehook.NativeSystem;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
 import com.github.kwhat.jnativehook.mouse.NativeMouseEvent;
 import com.github.kwhat.jnativehook.mouse.NativeMouseInputListener;
 import com.github.kwhat.jnativehook.mouse.NativeMouseWheelEvent;
 import com.github.kwhat.jnativehook.mouse.NativeMouseWheelListener;
+import com.sun.jna.platform.win32.Advapi32Util;
+import com.sun.jna.platform.win32.WinReg;
 import exersolver.inputlogger.output.BufferedCryptoZipWriter;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.util.Window;
 
 import java.io.IOException;
 import java.util.Locale;
@@ -32,8 +36,23 @@ public class InputListener implements NativeMouseInputListener, NativeMouseWheel
 
         fileWriter.log(System.nanoTime(), "Created log file");
         fileWriter.log("Operating system: " + System.getProperty("os.name").toLowerCase(Locale.ROOT));
-        fileWriter.log("Key repeat rate: " + System.getProperty("jnativehook.key.repeat.rate"));
-        fileWriter.log("Key repeat delay: " + System.getProperty("jnativehook.key.repeat.delay"));
+
+        Window window = MinecraftClient.getInstance().getWindow();
+        fileWriter.log(String.format("window pos %d %d", window.getX(), window.getY()));
+        fileWriter.log(String.format("window size %d %d", window.getWidth(), window.getHeight()));
+
+        fileWriter.log("KeyRepeatDelay: " + System.getProperty("jnativehook.key.repeat.delay"));
+        fileWriter.log("KeyRepeatRate: " + System.getProperty("jnativehook.key.repeat.rate"));
+
+        if (NativeSystem.getFamily().equals(NativeSystem.Family.WINDOWS)) {
+            String key = "Control Panel\\Accessibility\\Keyboard Response";
+
+            fileWriter.log("AutoRepeatDelay: " + Advapi32Util.registryGetStringValue(WinReg.HKEY_CURRENT_USER, key, "AutoRepeatDelay"));
+            fileWriter.log("AutoRepeatRate: " + Advapi32Util.registryGetStringValue(WinReg.HKEY_CURRENT_USER, key, "AutoRepeatRate"));
+            fileWriter.log("BounceTime: " + Advapi32Util.registryGetStringValue(WinReg.HKEY_CURRENT_USER, key, "BounceTime"));
+            fileWriter.log("DelayBeforeAcceptance: " + Advapi32Util.registryGetStringValue(WinReg.HKEY_CURRENT_USER, key, "DelayBeforeAcceptance"));
+            fileWriter.log("Flags: " + Advapi32Util.registryGetStringValue(WinReg.HKEY_CURRENT_USER, key, "Flags"));
+        }
 
         KeyBinding[] keyMappings = MinecraftClient.getInstance().options.keysAll;
         for (KeyBinding keyMapping : keyMappings) {
