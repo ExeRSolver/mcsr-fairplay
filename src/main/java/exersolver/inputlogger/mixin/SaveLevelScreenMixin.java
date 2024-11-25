@@ -23,7 +23,7 @@ public abstract class SaveLevelScreenMixin extends Screen {
     @Inject(method = "render",
             at = @At(value = "INVOKE", target = "net/minecraft/client/gui/screen/Screen.render(Lnet/minecraft/client/util/math/MatrixStack;IIF)V"))
     private void drawHashHex(MatrixStack matrices, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        if (!((TranslatableText) this.title).getKey().equals("menu.savingLevel"))
+        if (!(this.title instanceof TranslatableText) || !((TranslatableText) this.title).getKey().equals("menu.savingLevel"))
             return;
 
         BufferedCryptoZipWriter fileWriter = InputListener.getFileWriter();

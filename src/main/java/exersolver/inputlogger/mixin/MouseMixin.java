@@ -1,27 +1,26 @@
 package exersolver.inputlogger.mixin;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import exersolver.inputlogger.InputListener;
 import net.minecraft.client.Mouse;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Mouse.class)
 public abstract class MouseMixin {
-    @Shadow public abstract double getX();
-    @Shadow public abstract double getY();
 
-    @Inject(method = "lockCursor",
+    @WrapOperation(method = "lockCursor",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/InputUtil;setCursorParameters(JIDD)V"))
-    private void onCursorLock(CallbackInfo ci) {
-        InputListener.onCursorLockChanged(true, (int) this.getX(), (int) this.getY());
+    private void onCursorLock(long handler, int value, double x, double y, Operation<Void> original) {
+        InputListener.onCursorLockChanged(true, (int) x, (int) y);
+        original.call(handler, value, x, y);
     }
 
-    @Inject(method = "unlockCursor",
+    @WrapOperation(method = "unlockCursor",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/InputUtil;setCursorParameters(JIDD)V"))
-    private void onCursorUnlock(CallbackInfo ci) {
-        InputListener.onCursorLockChanged(false, (int) this.getX(), (int) this.getY());
+    private void onCursorUnlock(long handler, int value, double x, double y, Operation<Void> original) {
+        InputListener.onCursorLockChanged(false, (int) x, (int) y);
+        original.call(handler, value, x, y);
     }
 }
