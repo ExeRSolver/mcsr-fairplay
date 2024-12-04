@@ -3,6 +3,7 @@ package exersolver.inputlogger.mixin;
 import exersolver.inputlogger.InputListener;
 import exersolver.inputlogger.output.OutputUtils;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.registry.DynamicRegistryManager;
 import net.minecraft.world.gen.GeneratorOptions;
@@ -40,5 +41,15 @@ public abstract class MinecraftClientMixin {
 	public void disconnect(CallbackInfo ci) {
 		if (this.world != null)
 			InputListener.closeFileWriter();
+	}
+
+	@Inject(
+			at = @At(value = "FIELD",
+					target = "Lnet/minecraft/client/MinecraftClient;currentScreen:Lnet/minecraft/client/gui/screen/Screen;",
+					opcode = org.objectweb.asm.Opcodes.PUTFIELD),
+			method = "openScreen"
+	)
+	private void onScreenChanged(Screen screen, CallbackInfo ci) {
+		InputListener.onScreenChanged(screen);
 	}
 }

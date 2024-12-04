@@ -12,12 +12,16 @@ import com.github.kwhat.jnativehook.mouse.NativeMouseWheelListener;
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
 import exersolver.inputlogger.output.BufferedCryptoZipWriter;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.Window;
 
 import java.io.IOException;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,7 +38,15 @@ public class InputListener implements NativeMouseInputListener, NativeMouseWheel
         }
         fileWriter = fileWriterIn;
 
-        fileWriter.log(System.nanoTime(), "Created log file");
+        String modVersion = "";
+        Optional<ModContainer> modContainer = FabricLoader.getInstance().getModContainer(InputLogger.MOD_ID);
+        if (modContainer.isPresent())
+            modVersion = "-" + modContainer.get().getMetadata().getVersion().getFriendlyString();
+        fileWriter.log(System.nanoTime(), "Created log file for " + InputLogger.MOD_ID + modVersion);
+
+        modContainer = FabricLoader.getInstance().getModContainer("minecraft");
+        modContainer.ifPresent(container -> fileWriter.log("Minecraft version: " + container.getMetadata().getVersion().getFriendlyString()));
+
         fileWriter.log("Operating system: " + System.getProperty("os.name").toLowerCase(Locale.ROOT));
 
         Window window = MinecraftClient.getInstance().getWindow();
@@ -124,6 +136,15 @@ public class InputListener implements NativeMouseInputListener, NativeMouseWheel
             return;
 
         fileWriter.log(time, String.format("cursor %s %d %d", locked ? "locked" : "unlocked", x, y));
+    }
+
+    public static void onScreenChanged(Screen screen) {
+        long time = System.nanoTime();
+        if (fileWriter == null)
+            return;
+
+        String screenText = screen == null ? "null" : screen.getClass().getName();
+        fileWriter.log(time, String.format("screen %s", screenText));
     }
 
     @Override
