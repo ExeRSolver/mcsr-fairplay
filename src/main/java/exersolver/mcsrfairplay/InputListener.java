@@ -1,4 +1,4 @@
-package exersolver.inputlogger;
+package exersolver.mcsrfairplay;
 
 import com.github.kwhat.jnativehook.GlobalScreen;
 import com.github.kwhat.jnativehook.NativeHookException;
@@ -11,7 +11,7 @@ import com.github.kwhat.jnativehook.mouse.NativeMouseWheelEvent;
 import com.github.kwhat.jnativehook.mouse.NativeMouseWheelListener;
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
-import exersolver.inputlogger.output.BufferedCryptoZipWriter;
+import exersolver.mcsrfairplay.output.BufferedCryptoZipWriter;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.MinecraftClient;
@@ -33,16 +33,16 @@ public class InputListener implements NativeMouseInputListener, NativeMouseWheel
             try {
                 fileWriter.close();
             } catch (IOException e) {
-                InputLogger.LOGGER.error(e.getMessage(), e);
+                MCSRFairplay.LOGGER.error(e.getMessage(), e);
             }
         }
         fileWriter = fileWriterIn;
 
         String modVersion = "";
-        Optional<ModContainer> modContainer = FabricLoader.getInstance().getModContainer(InputLogger.MOD_ID);
+        Optional<ModContainer> modContainer = FabricLoader.getInstance().getModContainer(MCSRFairplay.MOD_ID);
         if (modContainer.isPresent())
             modVersion = "-" + modContainer.get().getMetadata().getVersion().getFriendlyString();
-        fileWriter.log(System.nanoTime(), "Created log file for " + InputLogger.MOD_ID + modVersion);
+        fileWriter.log(System.nanoTime(), "Created log file for " + MCSRFairplay.MOD_ID + modVersion);
 
         modContainer = FabricLoader.getInstance().getModContainer("minecraft");
         modContainer.ifPresent(container -> fileWriter.log("Minecraft version: " + container.getMetadata().getVersion().getFriendlyString()));
@@ -80,7 +80,7 @@ public class InputListener implements NativeMouseInputListener, NativeMouseWheel
         try {
             GlobalScreen.registerNativeHook();
         } catch (NativeHookException e) {
-            InputLogger.LOGGER.error(e.getMessage(), e);
+            MCSRFairplay.LOGGER.error(e.getMessage(), e);
         }
 
         GlobalScreen.addNativeMouseMotionListener(new InputListener());
@@ -96,9 +96,9 @@ public class InputListener implements NativeMouseInputListener, NativeMouseWheel
         try {
             fileWriter.close();
             String hash = fileWriter.getHashHex();
-            InputLogger.LOGGER.info(InputLogger.MOD_ID + " hash: " + hash);
+            MCSRFairplay.LOGGER.info(fileWriter.getHashFileName() + ": " + hash);
         } catch (IOException e) {
-            InputLogger.LOGGER.error(e.getMessage(), e);
+            MCSRFairplay.LOGGER.error(e.getMessage(), e);
         }
     }
 

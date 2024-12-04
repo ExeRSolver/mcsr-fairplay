@@ -1,6 +1,6 @@
-package exersolver.inputlogger.mixin;
+package exersolver.mcsrfairplay.mixin;
 
-import exersolver.inputlogger.InputListener;
+import exersolver.mcsrfairplay.InputListener;
 import net.minecraft.client.util.Window;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

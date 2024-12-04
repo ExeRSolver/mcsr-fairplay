@@ -1,9 +1,9 @@
 {
 	"schemaVersion": 1,
-	"id": "inputlogger",
+	"id": "mcsrfairplay",
 	"version": "${version}",
-	"name": "InputLogger",
-	"description": "Logs mouse and keyboard inputs.",
+	"name": "MCSR Fairplay",
+	"description": "Provides anti-cheat functionality for MCSR.",
 	"authors": [
 		{
 			"name": "ExeRSolver",
@@ -13,15 +13,15 @@
 		}
 	],
 	"license": "MIT",
-	"icon": "assets/inputlogger/icon.png",
+	"icon": "assets/mcsrfairplay/icon.png",
 	"environment": "client",
 	"entrypoints": {
 		"client": [
-          "exersolver.inputlogger.InputLogger"
+			"exersolver.mcsrfairplay.MCSRFairplay"
 		]
 	},
 	"mixins": [
-		"inputlogger.mixins.json"
+		"mcsrfairplay.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.16.0",
