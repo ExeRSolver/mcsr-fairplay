@@ -15,7 +15,7 @@ import exersolver.inputlogger.output.BufferedCryptoZipWriter;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.Window;
 
