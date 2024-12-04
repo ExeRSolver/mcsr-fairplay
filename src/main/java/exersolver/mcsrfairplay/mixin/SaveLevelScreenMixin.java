@@ -1,7 +1,7 @@
-package exersolver.inputlogger.mixin;
+package exersolver.mcsrfairplay.mixin;
 
-import exersolver.inputlogger.output.BufferedCryptoZipWriter;
-import exersolver.inputlogger.InputListener;
+import exersolver.mcsrfairplay.output.BufferedCryptoZipWriter;
+import exersolver.mcsrfairplay.InputListener;
 import net.minecraft.client.gui.screen.SaveLevelScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;

@@ -1,8 +1,8 @@
-package exersolver.inputlogger.mixin;
+package exersolver.mcsrfairplay.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import exersolver.inputlogger.InputListener;
+import exersolver.mcsrfairplay.InputListener;
 import net.minecraft.client.Mouse;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

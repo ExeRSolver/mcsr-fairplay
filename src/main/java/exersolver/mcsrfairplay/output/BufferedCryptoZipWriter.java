@@ -1,6 +1,6 @@
-package exersolver.inputlogger.output;
+package exersolver.mcsrfairplay.output;
 
-import exersolver.inputlogger.InputLogger;
+import exersolver.mcsrfairplay.MCSRFairplay;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -33,8 +33,12 @@ public class BufferedCryptoZipWriter extends BufferedWriter {
             this.write(message + "\n");
         }
         catch (IOException e) {
-            InputLogger.LOGGER.error(String.format("Error occurred when logging \"%s\"", message), e);
+            MCSRFairplay.LOGGER.error(String.format("Error occurred when logging \"%s\"", message), e);
         }
+    }
+
+    public String getHashFileName() {
+        return this.fileWriter.getHashFileName();
     }
 
     public String getHashHex() {

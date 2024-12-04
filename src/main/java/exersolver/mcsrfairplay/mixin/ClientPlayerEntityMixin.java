@@ -1,9 +1,8 @@
-package exersolver.inputlogger.mixin;
+package exersolver.mcsrfairplay.mixin;
 
-import exersolver.inputlogger.InputListener;
-import exersolver.inputlogger.InputLogger;
-import exersolver.inputlogger.output.BufferedCryptoZipWriter;
-import exersolver.inputlogger.output.OutputUtils;
+import exersolver.mcsrfairplay.InputListener;
+import exersolver.mcsrfairplay.output.BufferedCryptoZipWriter;
+import exersolver.mcsrfairplay.output.OutputUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.text.LiteralText;
@@ -27,7 +26,7 @@ public class ClientPlayerEntityMixin {
 
         OutputUtils.resetFileWriter();
         String hash = fileWriter.getHashHex();
-        Text text = new LiteralText(InputLogger.MOD_ID + " hash: " + hash);
+        Text text = new LiteralText( fileWriter.getHashFileName() + ": " + hash);
         MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(text);
     }
 }

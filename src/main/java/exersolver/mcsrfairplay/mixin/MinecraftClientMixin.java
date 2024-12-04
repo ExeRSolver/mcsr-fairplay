@@ -1,7 +1,7 @@
-package exersolver.inputlogger.mixin;
+package exersolver.mcsrfairplay.mixin;
 
-import exersolver.inputlogger.InputListener;
-import exersolver.inputlogger.output.OutputUtils;
+import exersolver.mcsrfairplay.InputListener;
+import exersolver.mcsrfairplay.output.OutputUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.world.ClientWorld;
