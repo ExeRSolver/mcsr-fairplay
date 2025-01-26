@@ -16,6 +16,9 @@
 	"icon": "assets/mcsrfairplay/icon.png",
 	"environment": "client",
 	"entrypoints": {
+		"preLaunch": [
+			"exersolver.mcsrfairplay.MCSRFairplay"
+		],
 		"client": [
 			"exersolver.mcsrfairplay.MCSRFairplay"
 		]
@@ -26,6 +29,7 @@
 	"depends": {
 		"fabricloader": ">=0.16.0",
 		"minecraft": ">=1.16 <=1.16.1",
-		"java": ">=8"
+		"java": ">=8",
+		"speedrunapi": "*"
 	}
 }
