@@ -15,12 +15,17 @@ import java.util.Map;
 import java.util.Optional;
 
 public class VerificationListWidget extends ElementListWidget<VerificationListWidget.Entry> {
+    private double lastScrollAmount = 0.0;
 
     public VerificationListWidget(MinecraftClient minecraftClient, int width, int height, int top, int bottom, Map<Text, List<List<StringRenderable>>> hashes, int totalHeight) {
         super(minecraftClient, width, height, top, bottom, totalHeight);
         // we cheat the list by only giving it a single entry,
         // so we can implement our own spacing instead of a fixed itemHeight
         this.addEntry(new Entry(hashes));
+    }
+
+    public void updateLastScrollAmount() {
+        this.lastScrollAmount = Math.max(this.lastScrollAmount, this.getScrollAmount());
     }
 
     public boolean isScrolledToBottom() {
@@ -47,6 +52,11 @@ public class VerificationListWidget extends ElementListWidget<VerificationListWi
         // don't consider itemHeight for this calculation
         this.setScrollAmount(this.getScrollAmount() - amount * 15);
         return true;
+    }
+
+    @Override
+    public void setScrollAmount(double amount) {
+        super.setScrollAmount(Math.min(amount, this.lastScrollAmount + 50.0));
     }
 
     @Override
@@ -99,6 +109,7 @@ public class VerificationListWidget extends ElementListWidget<VerificationListWi
         @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+            y += 3;
             for (Map.Entry<Text, List<List<StringRenderable>>> entry : this.hashes.entrySet()) {
                 textRenderer.draw(matrices, entry.getKey(), 10, y, 0xFFFFFF);
                 y += 14;

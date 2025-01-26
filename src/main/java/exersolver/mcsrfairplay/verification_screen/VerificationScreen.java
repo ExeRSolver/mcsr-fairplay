@@ -54,7 +54,7 @@ public class VerificationScreen extends Screen {
 
         this.list = this.addChild(new VerificationListWidget(
                 this.client, this.width, this.height, 32, this.height - 32, hashes,
-                hashes.values().stream().mapToInt(lists -> 14 + lists.stream().mapToInt(list -> list.size() * 10 + 2).sum() + 3).sum()
+                3 + hashes.values().stream().mapToInt(lists -> 14 + lists.stream().mapToInt(list -> list.size() * 10 + 2).sum() + 3).sum()
         ));
 
         this.done = this.addButton(new ButtonWidget(this.width / 2 - 100, this.height - 27, 200, 20, new TranslatableText("mcsrfairplay.gui.verification.please_scroll"), button -> this.onClose()));
@@ -68,6 +68,7 @@ public class VerificationScreen extends Screen {
             this.done.active = true;
             this.hasScrolledToBottom = true;
         }
+        this.list.updateLastScrollAmount();
     }
 
     @Override
