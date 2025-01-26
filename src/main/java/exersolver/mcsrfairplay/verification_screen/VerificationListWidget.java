@@ -1,31 +1,26 @@
 package exersolver.mcsrfairplay.verification_screen;
 
-import exersolver.mcsrfairplay.MCSRFairplay;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.ModContainer;
-import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.widget.ElementListWidget;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
+import net.minecraft.text.StringRenderable;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
-public class ModListWidget extends ElementListWidget<ModListWidget.Entry> {
+public class VerificationListWidget extends ElementListWidget<VerificationListWidget.Entry> {
 
-    public ModListWidget(MinecraftClient minecraftClient, int width, int height, int top, int bottom, int itemHeight) {
-        super(minecraftClient, width, height, top, bottom, itemHeight);
-
-        List<ModContainer> mods = new ArrayList<>(FabricLoader.getInstance().getAllMods());
-        mods.sort(Comparator.comparing(mod -> mod.getMetadata().getName()));
-        for (ModContainer mod : mods) {
-            this.addEntry(new Entry(mod.getMetadata()));
-        }
+    public VerificationListWidget(MinecraftClient minecraftClient, int width, int height, int top, int bottom, Map<Text, List<List<StringRenderable>>> hashes, int totalHeight) {
+        super(minecraftClient, width, height, top, bottom, totalHeight);
+        // we cheat the list by only giving it a single entry,
+        // so we can implement our own spacing instead of a fixed itemHeight
+        this.addEntry(new Entry(hashes));
     }
 
     public boolean isScrolledToBottom() {
@@ -45,6 +40,13 @@ public class ModListWidget extends ElementListWidget<ModListWidget.Entry> {
     @Override
     protected int getScrollbarPositionX() {
         return this.width - 6;
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+        // don't consider itemHeight for this calculation
+        this.setScrollAmount(this.getScrollAmount() - amount * 15);
+        return true;
     }
 
     @Override
@@ -83,12 +85,10 @@ public class ModListWidget extends ElementListWidget<ModListWidget.Entry> {
     }
 
     public static class Entry extends ElementListWidget.Entry<Entry> {
-        private final Text name;
-        private final Text hash;
+        private final Map<Text, List<List<StringRenderable>>> hashes;
 
-        public Entry(ModMetadata mod) {
-            this.name = new LiteralText(mod.getName()).append(new LiteralText(" (" + mod.getId() + "-" + mod.getVersion().getFriendlyString() + ")").formatted(Formatting.GRAY));
-            this.hash = new LiteralText(String.valueOf(MCSRFairplay.MOD_HASHES.getInt(mod.getId())));
+        public Entry(Map<Text, List<List<StringRenderable>>> hashes) {
+            this.hashes = hashes;
         }
 
         @Override
@@ -99,20 +99,19 @@ public class ModListWidget extends ElementListWidget<ModListWidget.Entry> {
         @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-            textRenderer.draw(
-                    matrices,
-                    this.name,
-                    x,
-                    y + 3,
-                    0xFFFFFF
-            );
-            textRenderer.draw(
-                    matrices,
-                    this.hash,
-                    x + entryWidth - textRenderer.getWidth(this.hash),
-                    y + 3,
-                    0xFFFFFF
-            );
+            for (Map.Entry<Text, List<List<StringRenderable>>> entry : this.hashes.entrySet()) {
+                textRenderer.draw(matrices, entry.getKey(), 10, y, 0xFFFFFF);
+                y += 14;
+
+                for (List<StringRenderable> list : entry.getValue()) {
+                    for (StringRenderable line : list) {
+                        textRenderer.draw(matrices, line, 15, y, 0xFFFFFF);
+                        y += 10;
+                    }
+                    y += 2;
+                }
+                y += 3;
+            }
         }
     }
 }

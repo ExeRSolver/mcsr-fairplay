@@ -18,7 +18,8 @@ public abstract class ScreenMixin {
             method = "handleTextClick",
             at = @At(
                     value = "INVOKE",
-                    target = "Lorg/apache/logging/log4j/Logger;error(Ljava/lang/String;Ljava/lang/Object;)V"
+                    target = "Lorg/apache/logging/log4j/Logger;error(Ljava/lang/String;Ljava/lang/Object;)V",
+                    remap = false
             )
     )
     private boolean openVerificationScreenClickEvent(Logger logger, String string, Object o, @Cancellable CallbackInfoReturnable<Boolean> cir) {
