@@ -21,7 +21,9 @@ public class ModHashing {
     public static final Map<String, String> MOD_HASHES = new HashMap<>();
     public static final Map<String, String> FILE_HASHES = new HashMap<>();
 
-    public static void init() {
+    public static String SESSION;
+
+    static {
         MCSRFairplay.LOGGER.info("Generating hashes for loaded mods...");
 
         int sessionId = (int) System.currentTimeMillis();
@@ -50,7 +52,11 @@ public class ModHashing {
             sessionHash = sessionHash * 31 + modHash.hashCode() * sessionId;
         }
 
-        MCSRFairplay.LOGGER.info("Finished generating hashes for session {}", Math.abs(sessionId) + "-" + Math.abs(sessionHash));
+        SESSION = Math.abs(sessionId) + "-" + Math.abs(sessionHash);
+        MCSRFairplay.LOGGER.info("Finished generating hashes for session {}", SESSION);
+    }
+
+    public static void init() {
     }
 
     private static String hashMod(ModContainer mod, MessageDigest sha512) {

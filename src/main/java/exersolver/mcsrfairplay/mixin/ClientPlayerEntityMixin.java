@@ -1,6 +1,7 @@
 package exersolver.mcsrfairplay.mixin;
 
 import exersolver.mcsrfairplay.InputListener;
+import exersolver.mcsrfairplay.ModHashing;
 import exersolver.mcsrfairplay.output.BufferedCryptoZipWriter;
 import exersolver.mcsrfairplay.output.OutputUtils;
 import net.minecraft.client.MinecraftClient;
@@ -36,7 +37,7 @@ public abstract class ClientPlayerEntityMixin {
                                         .withClickEvent(new ClickEvent(ClickEvent.Action.CHANGE_PAGE, "mcsrfairplay.open_verification_screen"))
                                         .setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TranslatableText("mcsrfairplay.gui.verification.tooltip")))
                                 )
-                ))
+                )).append(" (" + ModHashing.SESSION + ")")
         );
     }
 }
