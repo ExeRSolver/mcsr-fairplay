@@ -14,10 +14,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class VerificationListWidget extends ElementListWidget<VerificationListWidget.Entry> {
+public class ModListWidget extends ElementListWidget<ModListWidget.Entry> {
     private double lastScrollAmount = 0.0;
 
-    public VerificationListWidget(MinecraftClient minecraftClient, int width, int height, int top, int bottom, Map<Text, List<List<StringRenderable>>> hashes, int totalHeight) {
+    public ModListWidget(MinecraftClient minecraftClient, int width, int height, int top, int bottom, Map<Text, List<List<StringRenderable>>> hashes, int totalHeight) {
         super(minecraftClient, width, height, top, bottom, totalHeight);
         // we cheat the list by only giving it a single entry,
         // so we can implement our own spacing instead of a fixed itemHeight

@@ -3,7 +3,6 @@ package exersolver.mcsrfairplay.mixin;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.sugar.Cancellable;
 import exersolver.mcsrfairplay.verification_screen.VerificationScreen;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.ClickEvent;
 import org.apache.logging.log4j.Logger;
@@ -25,7 +24,7 @@ public abstract class ScreenMixin {
     private boolean openVerificationScreenClickEvent(Logger logger, String string, Object o, @Cancellable CallbackInfoReturnable<Boolean> cir) {
         ClickEvent event = (ClickEvent) o;
         if (event.getAction() == ClickEvent.Action.CHANGE_PAGE && event.getValue().equals("mcsrfairplay.open_verification_screen")) {
-            MinecraftClient.getInstance().openScreen(new VerificationScreen((Screen) (Object) this));
+            VerificationScreen.start();
             return false;
         }
         return true;

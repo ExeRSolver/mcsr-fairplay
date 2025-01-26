@@ -3,5 +3,6 @@
   "mcsrfairplay.gui.verification.message": "Click %s for verification",
   "mcsrfairplay.gui.verification.here": "HERE",
   "mcsrfairplay.gui.verification.tooltip": "Click to open Verification Screen",
-  "mcsrfairplay.gui.verification.please_scroll": "Please scroll down!"
+  "mcsrfairplay.gui.verification.please_scroll": "Please scroll down!",
+  "mcsrfairplay.gui.verification.next_page": "Next Page"
 }
