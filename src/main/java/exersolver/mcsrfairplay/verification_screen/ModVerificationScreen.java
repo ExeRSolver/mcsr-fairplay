@@ -5,7 +5,6 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.StringRenderable;
@@ -17,7 +16,6 @@ import java.util.*;
 
 public class ModVerificationScreen extends VerificationScreen {
     private ModListWidget list;
-    private ButtonWidget next;
     private boolean hasScrolledToBottom;
 
     public ModVerificationScreen(Screen parent) {
@@ -53,18 +51,23 @@ public class ModVerificationScreen extends VerificationScreen {
                 3 + hashes.values().stream().mapToInt(lists -> 14 + lists.stream().mapToInt(list -> list.size() * 10 + 2).sum() + 3).sum()
         ));
 
-        this.next = this.addButton(new ButtonWidget(this.width / 2 - 100, this.height - 27, 200, 20, new TranslatableText("mcsrfairplay.gui.verification.please_scroll"), button -> this.onClose()));
-        this.next.active = false;
+        super.init();
+        this.next.setMessage(new TranslatableText("mcsrfairplay.gui.verification.please_scroll"));
     }
 
     @Override
     public void tick() {
+        this.list.updateLastScrollAmount();
         if (!this.hasScrolledToBottom && this.list.isScrolledToBottom()) {
             this.next.setMessage(NEXT);
-            this.next.active = true;
             this.hasScrolledToBottom = true;
         }
-        this.list.updateLastScrollAmount();
+        super.tick();
+    }
+
+    @Override
+    protected boolean shouldActivateNext() {
+        return this.hasScrolledToBottom && super.shouldActivateNext();
     }
 
     @Override
