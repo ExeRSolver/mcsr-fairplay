@@ -4,5 +4,14 @@
   "mcsrfairplay.gui.verification.here": "HERE",
   "mcsrfairplay.gui.verification.tooltip": "Click to open Verification Screen",
   "mcsrfairplay.gui.verification.please_scroll": "Please scroll down!",
-  "mcsrfairplay.gui.verification.next_page": "Next Page"
+  "mcsrfairplay.gui.verification.next_page": "Next Page",
+
+  "mcsrfairplay.gui.zip_files.title": "Zip Additional Proof",
+  "mcsrfairplay.gui.zip_files.skip_zip": "Skip",
+  "mcsrfairplay.gui.zip_files.open_directory": "Open Directory",
+  "mcsrfairplay.gui.zip_files.zip_files": "Zip Files",
+  "mcsrfairplay.gui.zip_files.zipping_files": "Zipping files...",
+  "mcsrfairplay.gui.zip_files.finished_zipping": "Finished zipping files, press 'Open Directory' to get your file.",
+  "mcsrfairplay.gui.zip_files.failed_zipping": "Something went wrong when zipping your files!",
+  "mcsrfairplay.gui.zip_files.confirm_skip": "Are you sure you don't want to zip your files for verification?"
 }

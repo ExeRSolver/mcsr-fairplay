@@ -2,7 +2,6 @@ package exersolver.mcsrfairplay.verification_screen;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.screen.pack.DataPackScreen;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.server.MinecraftServer;
@@ -20,7 +19,6 @@ public class DataPackVerificationScreen extends VerificationScreen {
     protected void init() {
         this.dataPackScreen.init(this.client, this.width, this.height);
         super.init();
-        this.next.setMessage(ScreenTexts.DONE);
     }
 
     @Override
@@ -32,6 +30,6 @@ public class DataPackVerificationScreen extends VerificationScreen {
 
     @Override
     public void onClose() {
-        MinecraftClient.getInstance().openScreen(this.parent);
+        MinecraftClient.getInstance().openScreen(new ZipFilesScreen(this.parent));
     }
 }

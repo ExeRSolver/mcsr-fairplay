@@ -12,9 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class ModHashing {
@@ -36,7 +34,9 @@ public class ModHashing {
             throw new RuntimeException(e);
         }
 
-        for (ModContainer mod : FabricLoader.getInstance().getAllMods()) {
+        List<ModContainer> mods = new ArrayList<>(FabricLoader.getInstance().getAllMods());
+        mods.sort(Comparator.comparing(mod -> mod.getMetadata().getName()));
+        for (ModContainer mod : mods) {
             String id = mod.getMetadata().getId();
             String modHash = hashMod(mod, sha512);
             String fileHash = hashFile(mod, sha512);
@@ -62,12 +62,14 @@ public class ModHashing {
     private static String hashMod(ModContainer mod, MessageDigest sha512) {
         for (Path root : mod.getRootPaths()) {
             try (Stream<Path> stream = Files.walk(root)) {
-                stream.filter(path -> !Files.isDirectory(path)).forEach(path -> {
-                    try {
-                        sha512.update(path.toString().getBytes(StandardCharsets.UTF_8));
-                        sha512.update(Files.readAllBytes(path));
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+                stream.forEach(path -> {
+                    sha512.update(path.toString().getBytes(StandardCharsets.UTF_8));
+                    if (!Files.isDirectory(path)) {
+                        try {
+                            sha512.update(Files.readAllBytes(path));
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                 });
             } catch (IOException e) {
