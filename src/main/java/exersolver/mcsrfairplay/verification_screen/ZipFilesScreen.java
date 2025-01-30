@@ -27,6 +27,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -34,7 +36,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public class ZipFilesScreen extends Screen {
-    private static final String ATUM_REGEX = "(Random|Set) Speedrun #\\d+( \\(\\d+\\))?$";
+    private static final String ATUM_REGEX = "^(Random|Set) Speedrun #\\d+( \\(\\d+\\))?$";
+    private static final String LOG_REGEX = "^\\d{4}-\\d{2}-\\d{2}-\\d.log.gz$";
 
     private final Screen parent;
 
@@ -265,8 +268,25 @@ public class ZipFilesScreen extends Screen {
 
     private void zipLogs(Path directory) throws IOException {
         try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(directory.resolve("logs.zip")))) {
-            // TODO: zip split up logs
-            this.zipPath(zip, Paths.get("logs/latest.log"));
+            Path logs = FabricLoader.getInstance().getGameDir().resolve("logs");
+            this.zipPath(zip, logs.resolve("latest.log"));
+
+            long time = System.currentTimeMillis();
+            for (File file : Objects.requireNonNull(logs.toFile().listFiles())) {
+                String name = file.getName();
+                if (!name.matches(LOG_REGEX)) {
+                    continue;
+                }
+                try {
+                    // zip all logs within two days since the date rounds down
+                    DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                    Date date = dateFormat.parse(name.substring(0, "yyyy-MM-dd".length()));
+                    if (date.getTime() > time - 172800000) {
+                        this.zipPath(zip, file.toPath());
+                    }
+                } catch (ParseException ignored) {
+                }
+            }
         }
     }
 
