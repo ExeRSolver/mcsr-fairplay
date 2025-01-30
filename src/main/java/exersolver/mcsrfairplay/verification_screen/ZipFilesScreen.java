@@ -347,7 +347,7 @@ public class ZipFilesScreen extends Screen {
 
     private enum Phase {
         NONE,
-        DISCONNECT("menu.savingLevel"),
+        DISCONNECT("menu.savingLevel", true),
         ZIP_FILES("mcsrfairplay.gui.zip_files.zipping_files", true),
         FINISHED("mcsrfairplay.gui.zip_files.finished_zipping"),
         FAILURE("mcsrfairplay.gui.zip_files.failed_zipping");
