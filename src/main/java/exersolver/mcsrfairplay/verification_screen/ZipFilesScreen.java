@@ -39,6 +39,9 @@ public class ZipFilesScreen extends Screen {
     private final Screen parent;
 
     private Phase phase = Phase.NONE;
+    @Nullable
+    private Path directory;
+
     private ZipFilesExplanationListWidget explanation;
 
     public ZipFilesScreen(Screen parent) {
@@ -52,11 +55,15 @@ public class ZipFilesScreen extends Screen {
             this.addButton(new ButtonWidget(this.width / 2 - 160, this.height - 27, 150, 20, new TranslatableText("mcsrfairplay.gui.zip_files.skip_zip"), button -> this.onClose()));
             this.addButton(new ButtonWidget(this.width / 2 + 10, this.height - 27, 150, 20, new TranslatableText("mcsrfairplay.gui.zip_files.zip_files"), button -> {
                 button.visible = false;
-                this.zip();
+                this.zipFiles();
             }));
         } else {
             this.addButton(new ButtonWidget(this.width / 2 - 160, this.height - 27, 150, 20, new TranslatableText("mcsrfairplay.gui.zip_files.open_directory"), button -> this.openDirectory()));
-            this.addButton(new ButtonWidget(this.width / 2 + 10, this.height - 27, 150, 20, ScreenTexts.DONE, button -> this.onClose()));
+            this.addButton(new ButtonWidget(this.width / 2 + 10, this.height - 27, 150, 20, ScreenTexts.DONE, button -> {
+                if (!this.phase.blocking) {
+                    this.onClose();
+                }
+            }));
         }
 
         String[] explanation = new String[]{
@@ -66,9 +73,9 @@ public class ZipFilesScreen extends Screen {
                 "When using resource packs other than the vanilla resource packs, you are also required to submit their files.",
                 "",
                 "By pressing 'Zip Files', these files will be zipped and put into the .minecraft/mcsrfairplay/ directory.",
-                "If possible, the created file will automatically be opened in your file explorer, otherwise you may have to check that directory manually",
+                "Once all your files are zipped, you can press the 'Open Directory' button to view your files.",
                 "",
-                "Before uploading this file when submitting your run to the leaderboard, please check the submission rules to make sure all required files are included!"
+                "Before uploading these files when submitting your run to the leaderboard, please check the submission rules to make sure all required files are included!"
         };
 
         List<List<StringRenderable>> lines = Arrays.stream(explanation)
@@ -84,14 +91,14 @@ public class ZipFilesScreen extends Screen {
         super.init();
     }
 
-    private void zip() {
+    private void zipFiles() {
         if (this.phase != Phase.NONE) {
             return;
         }
         MinecraftClient client = MinecraftClient.getInstance();
         MinecraftServer server = client.getServer();
 
-        String fileName = client.getSession().getUsername() + "-" + (server != null ? server.getSavePath(WorldSavePath.ROOT).getParent().getFileName() : "multiplayer") + "-" + new SimpleDateFormat("yyyy-MM-dd-hh-mm").format(new Date());
+        String directoryName = client.getSession().getUsername() + "-" + (server != null ? server.getSavePath(WorldSavePath.ROOT).getParent().getFileName() : "multiplayer") + "-" + new SimpleDateFormat("yyyy-MM-dd-hh-mm").format(new Date());
 
         this.phase = Phase.DISCONNECT;
         this.disconnect(client);
@@ -99,7 +106,7 @@ public class ZipFilesScreen extends Screen {
         this.phase = Phase.ZIP_FILES;
         this.render(client);
         try {
-            this.zipFiles(client, server, fileName);
+            this.directory = this.zipFiles(client, server, directoryName);
             this.phase = Phase.FINISHED;
         } catch (Exception e) {
             MCSRFairplay.LOGGER.error("Failed to zip verification files", e);
@@ -119,37 +126,43 @@ public class ZipFilesScreen extends Screen {
         ((MinecraftClientAccessor) client).mcsrfairplay$render(false);
     }
 
-    private void zipFiles(MinecraftClient client, @Nullable MinecraftServer server, String fileName) throws IOException {
+    private Path zipFiles(MinecraftClient client, @Nullable MinecraftServer server, String directoryName) throws IOException {
         Files.createDirectories(MCSRFairplay.DIRECTORY);
-        Path zip = MCSRFairplay.DIRECTORY.resolve(FileNameUtil.getNextUniqueName(MCSRFairplay.DIRECTORY, fileName, ".zip"));
-        Files.createFile(zip);
+        Path directory = MCSRFairplay.DIRECTORY.resolve(FileNameUtil.getNextUniqueName(MCSRFairplay.DIRECTORY, directoryName, ""));
+        Files.createDirectory(directory);
 
-        try (ZipOutputStream output = new ZipOutputStream(Files.newOutputStream(zip))) {
-            if (server != null) {
-                this.zipWorlds(output, client, server);
+        if (server != null) {
+            this.zipWorlds(directory, client, server);
+        }
+        this.zipResourcePacks(directory, client);
+        this.zipLogs(directory);
+
+        return directory;
+    }
+
+    private void zipWorlds(Path directory, MinecraftClient client, MinecraftServer server) throws IOException {
+        try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(directory.resolve("world.zip")))) {
+            this.zipPath(zip, server.getSavePath(WorldSavePath.ROOT).getParent());
+        }
+
+        try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(directory.resolve("additional_worlds.zip")))) {
+            List<Path> worlds = this.getWorldsAtum(client, server).orElseGet(() -> this.getWorldsVanilla(client, server));
+            if (worlds.size() < 5) {
+                MCSRFairplay.LOGGER.warn("Only found {} old worlds!", worlds.size());
             }
-            this.zipResourcePacks(output, client);
-            this.zipLog(output);
+            for (Path world : worlds) {
+                this.zipPath(zip, world);
+            }
         }
     }
 
-    private void zipWorlds(ZipOutputStream zip, MinecraftClient client, MinecraftServer server) throws IOException {
-        Path world = server.getSavePath(WorldSavePath.ROOT).getParent();
-        this.zipPath(zip, "world_file/", world);
-
-        if (!this.zipWorldsAtum(zip, client, server)) {
-            System.out.println("zipWorldsVanilla");
-            this.zipWorldsVanilla(zip, client, server);
-        }
-    }
-
-    private boolean zipWorldsAtum(ZipOutputStream zip, MinecraftClient client, MinecraftServer server) throws IOException {
+    private Optional<List<Path>> getWorldsAtum(MinecraftClient client, MinecraftServer server) {
         if (!FabricLoader.getInstance().isModLoaded("atum")) {
-            return false;
+            return Optional.empty();
         }
         String world = server.getSavePath(WorldSavePath.ROOT).getParent().getFileName().toString();
         if (!world.matches(ATUM_REGEX)) {
-            return false;
+            return Optional.empty();
         }
 
         Path saves = client.getLevelStorage().getSavesDirectory();
@@ -162,19 +175,20 @@ public class ZipFilesScreen extends Screen {
             String prefix = world.substring(0, countStart);
             int count = Integer.parseInt(world.substring(countStart, countEnd));
 
+            List<Path> worlds = new ArrayList<>();
+
             // zip 5 previous resets
             for (int i = 1; i <= 5; i++) {
                 Path previousWorld = this.findWorldAtum(saves, prefix, count - i);
                 if (previousWorld == null) {
-                    MCSRFairplay.LOGGER.warn("Only found {} old atum worlds!", i - 1);
                     break;
                 }
-                this.zipPath(zip, "world_files/", previousWorld);
+                worlds.add(previousWorld);
             }
 
             // zip up to 100 resets after if SeedQueue is loaded
             if (!FabricLoader.getInstance().isModLoaded("seedqueue")) {
-                return true;
+                return Optional.of(worlds);
             }
 
             for (int i = 1; i <= 100; i++) {
@@ -182,12 +196,13 @@ public class ZipFilesScreen extends Screen {
                 if (nextWorld == null) {
                     break;
                 }
-                this.zipPath(zip, "world_files/", nextWorld);
+                worlds.add(nextWorld);
             }
+
+            return Optional.of(worlds);
         } catch (NumberFormatException e) {
-            return false;
+            return Optional.empty();
         }
-        return true;
     }
 
     private Path findWorldAtum(Path saves, String prefix, int counter) {
@@ -208,62 +223,64 @@ public class ZipFilesScreen extends Screen {
         return world;
     }
 
-    private void zipWorldsVanilla(ZipOutputStream zip, MinecraftClient client, MinecraftServer server) throws IOException {
-        Path world = server.getSavePath(WorldSavePath.ROOT).getParent();
+    private List<Path> getWorldsVanilla(MinecraftClient client, MinecraftServer server) {
+        File world = server.getSavePath(WorldSavePath.ROOT).getParent().toFile();
 
         SortedSet<Pair<Path, Long>> previousWorlds = new TreeSet<>(Comparator.comparing(Pair::getRight));
         for (File file : Objects.requireNonNull(client.getLevelStorage().getSavesDirectory().toFile().listFiles())) {
-            Path path = file.toPath();
-            if (path.equals(world)) {
+            if (file.equals(world)) {
                 continue;
             }
-            Path levelDat = path.resolve("level.dat");
-            if (!Files.exists(levelDat)) {
+            File levelDat = new File(file, "level.dat");
+            if (!levelDat.exists()) {
                 continue;
             }
 
-            long lastModified = Files.getLastModifiedTime(levelDat).toMillis();
+            long lastModified = levelDat.lastModified();
             if (previousWorlds.size() < 5) {
-                previousWorlds.add(new Pair<>(path, lastModified));
+                previousWorlds.add(new Pair<>(file.toPath(), lastModified));
                 continue;
             }
 
             Pair<Path, Long> oldestWorld = previousWorlds.first();
             if (lastModified > oldestWorld.getRight()) {
                 previousWorlds.remove(oldestWorld);
-                previousWorlds.add(new Pair<>(path, lastModified));
+                previousWorlds.add(new Pair<>(file.toPath(), lastModified));
             }
         }
 
-        for (Pair<Path, Long> previousWorld : previousWorlds) {
-            this.zipPath(zip, "world_files/", previousWorld.getLeft());
-        }
+        return previousWorlds.stream().map(Pair::getLeft).collect(Collectors.toList());
     }
 
-    private void zipResourcePacks(ZipOutputStream zip, MinecraftClient client) throws IOException {
-        for (ClientResourcePackProfile pack : client.getResourcePackManager().getEnabledProfiles()) {
-            String name = pack.getName();
-            if (name.startsWith("file/")) {
-                this.zipPath(zip, "resource_packs/", client.getResourcePackDir().toPath().resolve(name.substring("file/".length())));
+    private void zipResourcePacks(Path directory, MinecraftClient client) throws IOException {
+        try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(directory.resolve("resourcepacks.zip")))) {
+            for (ClientResourcePackProfile pack : client.getResourcePackManager().getEnabledProfiles()) {
+                String name = pack.getName();
+                if (name.startsWith("file/")) {
+                    this.zipPath(zip, client.getResourcePackDir().toPath().resolve(name.substring("file/".length())));
+                }
             }
         }
     }
 
-    private void zipLog(ZipOutputStream zip) throws IOException {
-        this.zipPath(zip, "logs/", Paths.get("logs/latest.log"));
+    private void zipLogs(Path directory) throws IOException {
+        try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(directory.resolve("logs.zip")))) {
+            // TODO: zip split up logs
+            this.zipPath(zip, Paths.get("logs/latest.log"));
+        }
     }
 
-    private void zipPath(ZipOutputStream zip, String prefix, Path path) throws IOException {
+    private void zipPath(ZipOutputStream zip, Path path) throws IOException {
         Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                zip.putNextEntry(new ZipEntry(prefix + path.getParent().relativize(file)));
+                zip.putNextEntry(new ZipEntry(path.getParent().relativize(file).toString()));
                 Files.copy(file, zip);
                 zip.closeEntry();
                 return FileVisitResult.CONTINUE;
             }
 
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                zip.putNextEntry(new ZipEntry(prefix + path.getParent().relativize(dir) + "/"));
+                zip.putNextEntry(new ZipEntry(path.getParent().relativize(dir) + "/"));
                 zip.closeEntry();
                 return FileVisitResult.CONTINUE;
             }
@@ -271,7 +288,9 @@ public class ZipFilesScreen extends Screen {
     }
 
     private void openDirectory() {
-        Util.getOperatingSystem().open(MCSRFairplay.DIRECTORY.toFile());
+        if (this.directory != null) {
+            Util.getOperatingSystem().open(this.directory.toFile());
+        }
     }
 
     @Override
@@ -284,6 +303,11 @@ public class ZipFilesScreen extends Screen {
         }
         this.drawCenteredText(matrices, this.textRenderer, this.title, this.width / 2, 15, 0xFFFFFF);
         super.render(matrices, mouseX, mouseY, delta);
+    }
+
+    @Override
+    public boolean shouldCloseOnEsc() {
+        return false;
     }
 
     @Override
@@ -304,18 +328,25 @@ public class ZipFilesScreen extends Screen {
     private enum Phase {
         NONE,
         DISCONNECT("menu.savingLevel"),
-        ZIP_FILES("mcsrfairplay.gui.zip_files.zipping_files"),
+        ZIP_FILES("mcsrfairplay.gui.zip_files.zipping_files", true),
         FINISHED("mcsrfairplay.gui.zip_files.finished_zipping"),
         FAILURE("mcsrfairplay.gui.zip_files.failed_zipping");
 
         private final Text text;
+        private final boolean blocking;
 
         Phase() {
             this.text = null;
+            this.blocking = false;
         }
 
         Phase(String key) {
+            this(key, false);
+        }
+
+        Phase(String key, boolean blocking) {
             this.text = new TranslatableText(key);
+            this.blocking = blocking;
         }
     }
 }
