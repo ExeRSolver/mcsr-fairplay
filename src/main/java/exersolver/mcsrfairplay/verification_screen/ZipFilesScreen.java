@@ -6,7 +6,6 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.resource.ClientResourcePackProfile;
@@ -61,12 +60,12 @@ public class ZipFilesScreen extends Screen {
                 this.zipFiles();
             }));
         } else {
-            this.addButton(new ButtonWidget(this.width / 2 - 160, this.height - 27, 150, 20, new TranslatableText("mcsrfairplay.gui.zip_files.open_directory"), button -> this.openDirectory()));
-            this.addButton(new ButtonWidget(this.width / 2 + 10, this.height - 27, 150, 20, ScreenTexts.DONE, button -> {
+            this.addButton(new ButtonWidget(this.width / 2 - 160, this.height - 27, 150, 20, new TranslatableText("gui.toTitle"), button -> {
                 if (!this.phase.blocking) {
                     this.onClose();
                 }
             }));
+            this.addButton(new ButtonWidget(this.width / 2 + 10, this.height - 27, 150, 20, new TranslatableText("mcsrfairplay.gui.zip_files.open_directory"), button -> this.openDirectory()));
         }
 
         String[] explanation = new String[]{
