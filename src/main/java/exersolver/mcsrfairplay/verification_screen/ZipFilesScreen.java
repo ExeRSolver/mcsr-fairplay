@@ -16,7 +16,6 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.StringRenderable;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
-import net.minecraft.util.FileNameUtil;
 import net.minecraft.util.Pair;
 import net.minecraft.util.Util;
 import net.minecraft.util.WorldSavePath;
@@ -24,7 +23,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -42,7 +44,7 @@ public class ZipFilesScreen extends Screen {
 
     private Phase phase = Phase.NONE;
     @Nullable
-    private Path directory;
+    private Path path;
 
     private ZipFilesExplanationListWidget explanation;
 
@@ -75,9 +77,9 @@ public class ZipFilesScreen extends Screen {
                 "When using resource packs other than the vanilla resource packs, you are also required to submit their files.",
                 "",
                 "By pressing 'Zip Files', these files will be zipped and put into the .minecraft/mcsrfairplay/ directory.",
-                "Once all your files are zipped, you can press the 'Open Directory' button to view your files.",
+                "Once all your files are zipped, you can press the 'Open Directory' button to view the zipped file.",
                 "",
-                "Before uploading these files when submitting your run to the leaderboard, please check the submission rules to make sure all required files are included!"
+                "Before uploading this file when submitting your run to the leaderboard, please check the submission rules to make sure all required files are included!"
         };
 
         List<List<StringRenderable>> lines = Arrays.stream(explanation)
@@ -100,7 +102,7 @@ public class ZipFilesScreen extends Screen {
         MinecraftClient client = MinecraftClient.getInstance();
         MinecraftServer server = client.getServer();
 
-        String directoryName = client.getSession().getUsername() + "-" + (server != null ? server.getSavePath(WorldSavePath.ROOT).getParent().getFileName() : "multiplayer") + "-" + new SimpleDateFormat("yyyy-MM-dd-hh-mm").format(new Date());
+        String fileName = client.getSession().getUsername() + "-" + (server != null ? server.getSavePath(WorldSavePath.ROOT).getParent().getFileName() : "multiplayer") + "-" + new SimpleDateFormat("yyyy-MM-dd-hh-mm").format(new Date());
 
         this.phase = Phase.DISCONNECT;
         this.disconnect(client);
@@ -108,7 +110,7 @@ public class ZipFilesScreen extends Screen {
         this.phase = Phase.ZIP_FILES;
         this.render(client);
         try {
-            this.directory = this.zipFiles(client, server, directoryName);
+            this.path = this.zipFiles(client, server, fileName);
             this.phase = Phase.FINISHED;
         } catch (Exception e) {
             MCSRFairplay.LOGGER.error("Failed to zip verification files", e);
@@ -128,33 +130,39 @@ public class ZipFilesScreen extends Screen {
         ((MinecraftClientAccessor) client).mcsrfairplay$render(false);
     }
 
-    private Path zipFiles(MinecraftClient client, @Nullable MinecraftServer server, String directoryName) throws IOException {
+    private Path zipFiles(MinecraftClient client, @Nullable MinecraftServer server, String fileName) throws IOException {
         Files.createDirectories(MCSRFairplay.DIRECTORY);
-        Path directory = MCSRFairplay.DIRECTORY.resolve(FileNameUtil.getNextUniqueName(MCSRFairplay.DIRECTORY, directoryName, ""));
-        Files.createDirectory(directory);
+        Path path = this.getNextUniquePath(fileName);
 
-        if (server != null) {
-            this.zipWorlds(directory, client, server);
+        try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(path))) {
+            if (server != null) {
+                this.zipWorlds(zip, client, server);
+            }
+            this.zipResourcePacks(zip, client);
+            this.zipLogs(zip);
         }
-        this.zipResourcePacks(directory, client);
-        this.zipLogs(directory);
 
-        return directory;
+        return path;
     }
 
-    private void zipWorlds(Path directory, MinecraftClient client, MinecraftServer server) throws IOException {
-        try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(directory.resolve("world.zip")))) {
-            this.zipPath(zip, server.getSavePath(WorldSavePath.ROOT).getParent());
+    private Path getNextUniquePath(String name) {
+        Path path = MCSRFairplay.DIRECTORY.resolve(name + ".zip");
+        int i = 1;
+        while (Files.exists(path)) {
+            path = MCSRFairplay.DIRECTORY.resolve(name + " (" + i++ + ").zip");
         }
+        return path;
+    }
 
-        try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(directory.resolve("additional_worlds.zip")))) {
-            List<Path> worlds = this.getWorldsAtum(client, server).orElseGet(() -> this.getWorldsVanilla(client, server));
-            if (worlds.size() < 5) {
-                MCSRFairplay.LOGGER.warn("Only found {} old worlds!", worlds.size());
-            }
-            for (Path world : worlds) {
-                this.zipPath(zip, world);
-            }
+    private void zipWorlds(ZipOutputStream zip, MinecraftClient client, MinecraftServer server) throws IOException {
+        this.zipPath(zip, "world/", server.getSavePath(WorldSavePath.ROOT).getParent());
+
+        List<Path> worlds = this.getWorldsAtum(client, server).orElseGet(() -> this.getWorldsVanilla(client, server));
+        if (worlds.size() < 5) {
+            MCSRFairplay.LOGGER.warn("Only found {} old worlds!", worlds.size());
+        }
+        for (Path world : worlds) {
+            this.zipPath(zip, "additional_worlds/", world);
         }
     }
 
@@ -254,52 +262,48 @@ public class ZipFilesScreen extends Screen {
         return previousWorlds.stream().map(Pair::getLeft).collect(Collectors.toList());
     }
 
-    private void zipResourcePacks(Path directory, MinecraftClient client) throws IOException {
-        try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(directory.resolve("resourcepacks.zip")))) {
-            for (ClientResourcePackProfile pack : client.getResourcePackManager().getEnabledProfiles()) {
-                String name = pack.getName();
-                if (name.startsWith("file/")) {
-                    this.zipPath(zip, client.getResourcePackDir().toPath().resolve(name.substring("file/".length())));
-                }
+    private void zipResourcePacks(ZipOutputStream zip, MinecraftClient client) throws IOException {
+        for (ClientResourcePackProfile pack : client.getResourcePackManager().getEnabledProfiles()) {
+            String name = pack.getName();
+            if (name.startsWith("file/")) {
+                this.zipPath(zip, "resourcepacks/", client.getResourcePackDir().toPath().resolve(name.substring("file/".length())));
             }
         }
     }
 
-    private void zipLogs(Path directory) throws IOException {
-        try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(directory.resolve("logs.zip")))) {
-            Path logs = FabricLoader.getInstance().getGameDir().resolve("logs");
-            this.zipPath(zip, logs.resolve("latest.log"));
+    private void zipLogs(ZipOutputStream zip) throws IOException {
+        Path logs = FabricLoader.getInstance().getGameDir().resolve("logs");
+        this.zipPath(zip, "logs/", logs.resolve("latest.log"));
 
-            long time = System.currentTimeMillis();
-            for (File file : Objects.requireNonNull(logs.toFile().listFiles())) {
-                String name = file.getName();
-                if (!name.matches(LOG_REGEX)) {
-                    continue;
+        long time = System.currentTimeMillis();
+        for (File file : Objects.requireNonNull(logs.toFile().listFiles())) {
+            String name = file.getName();
+            if (!name.matches(LOG_REGEX)) {
+                continue;
+            }
+            try {
+                // zip all logs within two days since the date rounds down
+                DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                Date date = dateFormat.parse(name.substring(0, "yyyy-MM-dd".length()));
+                if (date.getTime() > time - 172800000) {
+                    this.zipPath(zip, "logs/", file.toPath());
                 }
-                try {
-                    // zip all logs within two days since the date rounds down
-                    DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                    Date date = dateFormat.parse(name.substring(0, "yyyy-MM-dd".length()));
-                    if (date.getTime() > time - 172800000) {
-                        this.zipPath(zip, file.toPath());
-                    }
-                } catch (ParseException ignored) {
-                }
+            } catch (ParseException ignored) {
             }
         }
     }
 
-    private void zipPath(ZipOutputStream zip, Path path) throws IOException {
+    private void zipPath(ZipOutputStream zip, String prefix, Path path) throws IOException {
         Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                zip.putNextEntry(new ZipEntry(path.getParent().relativize(file).toString()));
+                zip.putNextEntry(new ZipEntry(prefix + path.getParent().relativize(file)));
                 Files.copy(file, zip);
                 zip.closeEntry();
                 return FileVisitResult.CONTINUE;
             }
 
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                zip.putNextEntry(new ZipEntry(path.getParent().relativize(dir) + "/"));
+                zip.putNextEntry(new ZipEntry(prefix + path.getParent().relativize(dir) + "/"));
                 zip.closeEntry();
                 return FileVisitResult.CONTINUE;
             }
@@ -307,8 +311,8 @@ public class ZipFilesScreen extends Screen {
     }
 
     private void openDirectory() {
-        if (this.directory != null) {
-            Util.getOperatingSystem().open(this.directory.toFile());
+        if (this.path != null) {
+            Util.getOperatingSystem().open(MCSRFairplay.DIRECTORY.toFile());
         }
     }
 
@@ -319,6 +323,9 @@ public class ZipFilesScreen extends Screen {
             this.explanation.render(matrices, mouseX, mouseY, delta);
         } else {
             this.drawCenteredText(matrices, this.textRenderer, this.phase.text, this.width / 2, 70, 0xFFFFFF);
+            if (this.path != null) {
+                this.drawCenteredText(matrices, this.textRenderer, StringRenderable.plain(this.path.getFileName().toString()), this.width / 2, 95, 0xFFFFFF);
+            }
         }
         this.drawCenteredText(matrices, this.textRenderer, this.title, this.width / 2, 15, 0xFFFFFF);
         super.render(matrices, mouseX, mouseY, delta);
