@@ -56,7 +56,7 @@ public class ModListWidget extends ElementListWidget<ModListWidget.Entry> {
 
     @Override
     public void setScrollAmount(double amount) {
-        super.setScrollAmount(Math.min(amount, this.lastScrollAmount + 50.0));
+        super.setScrollAmount(Math.min(amount, this.lastScrollAmount + this.height / 4.0));
     }
 
     @Override
