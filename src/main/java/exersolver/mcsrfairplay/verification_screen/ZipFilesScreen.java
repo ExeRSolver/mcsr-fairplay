@@ -201,7 +201,7 @@ public class ZipFilesScreen extends Screen {
                 return Optional.of(worlds);
             }
 
-            for (int i = 1; i <= 100; i++) {
+            for (int i = 1; true; i++) {
                 Path nextWorld = this.findWorldAtum(saves, prefix, count + i);
                 if (nextWorld == null) {
                     break;
