@@ -7,12 +7,10 @@ import net.minecraft.client.gui.widget.ElementListWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.StringRenderable;
 import net.minecraft.text.Text;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class ModListWidget extends ElementListWidget<ModListWidget.Entry> {
     private double lastScrollAmount = 0.0;
@@ -57,41 +55,6 @@ public class ModListWidget extends ElementListWidget<ModListWidget.Entry> {
     @Override
     public void setScrollAmount(double amount) {
         super.setScrollAmount(Math.min(amount, this.lastScrollAmount + this.height / 4.0));
-    }
-
-    @Override
-    protected int getMaxPosition() {
-        return super.getMaxPosition();
-    }
-
-    @Override
-    public Optional<Element> hoveredElement(double mouseX, double mouseY) {
-        return super.hoveredElement(mouseX, mouseY);
-    }
-
-    @Override
-    public void mouseMoved(double mouseX, double mouseY) {
-        super.mouseMoved(mouseX, mouseY);
-    }
-
-    @Override
-    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        return super.keyReleased(keyCode, scanCode, modifiers);
-    }
-
-    @Override
-    public boolean charTyped(char chr, int keyCode) {
-        return super.charTyped(chr, keyCode);
-    }
-
-    @Override
-    public void setInitialFocus(@Nullable Element element) {
-        super.setInitialFocus(element);
-    }
-
-    @Override
-    public void focusOn(@Nullable Element element) {
-        super.focusOn(element);
     }
 
     public static class Entry extends ElementListWidget.Entry<Entry> {
