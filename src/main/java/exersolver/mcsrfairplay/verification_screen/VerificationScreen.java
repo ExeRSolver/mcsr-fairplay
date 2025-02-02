@@ -22,7 +22,7 @@ public abstract class VerificationScreen extends Screen {
     protected void init() {
         this.next = this.addButton(new ButtonWidget(this.width / 2 - 100, this.height - 27, 200, 20, NEXT, button -> this.onClose()));
         this.next.active = false;
-        this.activateNext = System.currentTimeMillis() + 250;
+        this.activateNext = System.nanoTime() + 250_000_000L;
     }
 
     @Override
@@ -33,7 +33,7 @@ public abstract class VerificationScreen extends Screen {
     }
 
     protected boolean shouldActivateNext() {
-        return System.currentTimeMillis() > this.activateNext;
+        return System.nanoTime() > this.activateNext;
     }
 
     @Override
