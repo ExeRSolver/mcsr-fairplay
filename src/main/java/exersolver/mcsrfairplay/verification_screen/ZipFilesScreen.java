@@ -158,9 +158,6 @@ public class ZipFilesScreen extends Screen {
         this.zipPath(zip, "world/", server.getSavePath(WorldSavePath.ROOT).getParent());
 
         List<Path> worlds = this.getWorldsAtum(client, server).orElseGet(() -> this.getWorldsVanilla(client, server));
-        if (worlds.size() < 5) {
-            MCSRFairplay.LOGGER.warn("Only found {} old worlds!", worlds.size());
-        }
         for (Path world : worlds) {
             this.zipPath(zip, "additional_worlds/", world);
         }
@@ -189,11 +186,12 @@ public class ZipFilesScreen extends Screen {
 
             // zip 5 previous resets
             for (int i = 1; i <= 5; i++) {
-                Path previousWorld = this.findWorldAtum(saves, prefix, count - i);
-                if (previousWorld == null) {
+                List<Path> previousWorlds = this.findWorldsAtum(saves, prefix, count - i);
+                if (previousWorlds.isEmpty()) {
+                    MCSRFairplay.LOGGER.warn("Only found {} old worlds!", i - 1);
                     break;
                 }
-                worlds.add(previousWorld);
+                worlds.addAll(previousWorlds);
             }
 
             // zip up to 100 resets after if SeedQueue is loaded
@@ -202,11 +200,11 @@ public class ZipFilesScreen extends Screen {
             }
 
             for (int i = 1; true; i++) {
-                Path nextWorld = this.findWorldAtum(saves, prefix, count + i);
-                if (nextWorld == null) {
+                List<Path> nextWorlds = this.findWorldsAtum(saves, prefix, count + i);
+                if (nextWorlds.isEmpty()) {
                     break;
                 }
-                worlds.add(nextWorld);
+                worlds.addAll(nextWorlds);
             }
 
             return Optional.of(worlds);
@@ -215,22 +213,21 @@ public class ZipFilesScreen extends Screen {
         }
     }
 
-    private Path findWorldAtum(Path saves, String prefix, int counter) {
+    private List<Path> findWorldsAtum(Path saves, String prefix, int counter) {
         String name = prefix + counter;
         Path world = saves.resolve(name);
-        if (!Files.exists(world)) {
-            return null;
-        }
+        List<Path> worlds = new ArrayList<>();
 
         // If a Random Speedrun #1234 directory already exists,
         // Atum will instead create Random Speedrun #1234 (1)
-        // and we have to find the latest one
+        // and we have to zip all of them
         int uniqueNumber = 1;
-        while (Files.exists(saves.resolve(name + " (" + uniqueNumber + ")"))) {
-            world = saves.resolve(name + " (" + uniqueNumber + ")");
+        while (Files.exists(world)) {
+            worlds.add(world);
+            world = saves.resolve(name + " (" + uniqueNumber++ + ")");
         }
 
-        return world;
+        return worlds;
     }
 
     private List<Path> getWorldsVanilla(MinecraftClient client, MinecraftServer server) {
@@ -257,6 +254,10 @@ public class ZipFilesScreen extends Screen {
                 previousWorlds.remove(oldestWorld);
                 previousWorlds.add(new Pair<>(file.toPath(), lastModified));
             }
+        }
+
+        if (previousWorlds.size() < 5) {
+            MCSRFairplay.LOGGER.warn("Only found {} old worlds!", previousWorlds.size());
         }
 
         return previousWorlds.stream().map(Pair::getLeft).collect(Collectors.toList());
