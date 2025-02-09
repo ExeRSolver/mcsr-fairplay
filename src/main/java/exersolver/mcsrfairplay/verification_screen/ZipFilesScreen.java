@@ -1,6 +1,7 @@
 package exersolver.mcsrfairplay.verification_screen;
 
 import exersolver.mcsrfairplay.MCSRFairplay;
+import exersolver.mcsrfairplay.compat.AtumCompat;
 import exersolver.mcsrfairplay.mixin.accessor.MinecraftClientAccessor;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
@@ -43,6 +44,8 @@ public class ZipFilesScreen extends Screen {
     private final Screen parent;
 
     private Phase phase = Phase.NONE;
+    @Nullable
+    private Text textOverride;
     @Nullable
     private Path path;
 
@@ -107,6 +110,9 @@ public class ZipFilesScreen extends Screen {
         this.phase = Phase.DISCONNECT;
         this.disconnect(client);
 
+        this.phase = Phase.STOP_ATUM;
+        this.stopAtum();
+
         this.phase = Phase.ZIP_FILES;
         this.render(client);
         try {
@@ -123,6 +129,12 @@ public class ZipFilesScreen extends Screen {
         if (world != null) {
             world.disconnect();
             client.disconnect(this);
+        }
+    }
+
+    private void stopAtum() {
+        if (MCSRFairplay.HAS_ATUM) {
+            AtumCompat.stopRunning();
         }
     }
 
@@ -323,7 +335,7 @@ public class ZipFilesScreen extends Screen {
         if (this.phase == Phase.NONE) {
             this.explanation.render(matrices, mouseX, mouseY, delta);
         } else {
-            this.drawCenteredText(matrices, this.textRenderer, this.phase.text, this.width / 2, 70, 0xFFFFFF);
+            this.drawCenteredText(matrices, this.textRenderer, this.textOverride != null ? this.textOverride : this.phase.text, this.width / 2, 70, 0xFFFFFF);
             if (this.path != null) {
                 this.drawCenteredText(matrices, this.textRenderer, StringRenderable.plain(this.path.getFileName().toString()), this.width / 2, 95, 0xFFFFFF);
             }
@@ -352,9 +364,26 @@ public class ZipFilesScreen extends Screen {
         }, new TranslatableText("mcsrfairplay.gui.zip_files.confirm_skip"), LiteralText.EMPTY));
     }
 
+    public static boolean captureScreen(Screen screen) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        Screen current = client.currentScreen;
+        if (current == screen || !(current instanceof ZipFilesScreen)) {
+            return false;
+        }
+        ZipFilesScreen zipFilesScreen = (ZipFilesScreen) current;
+        if (!zipFilesScreen.phase.blocking) {
+            return false;
+        }
+        zipFilesScreen.textOverride = screen.getTitle();
+        zipFilesScreen.render(client);
+        zipFilesScreen.textOverride = null;
+        return true;
+    }
+
     private enum Phase {
         NONE,
         DISCONNECT("menu.savingLevel", true),
+        STOP_ATUM("mcsrfairplay.gui.zip_files.stopping_atum", true),
         ZIP_FILES("mcsrfairplay.gui.zip_files.zipping_files", true),
         FINISHED("mcsrfairplay.gui.zip_files.finished_zipping"),
         FAILURE("mcsrfairplay.gui.zip_files.failed_zipping");

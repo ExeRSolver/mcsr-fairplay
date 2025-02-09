@@ -1,7 +1,10 @@
 package exersolver.mcsrfairplay.mixin;
 
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import exersolver.mcsrfairplay.InputListener;
 import exersolver.mcsrfairplay.output.OutputUtils;
+import exersolver.mcsrfairplay.verification_screen.ZipFilesScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.world.ClientWorld;
@@ -51,5 +54,12 @@ public abstract class MinecraftClientMixin {
 	)
 	private void onScreenChanged(Screen screen, CallbackInfo ci) {
 		InputListener.onScreenChanged(screen);
+	}
+
+	@WrapMethod(method = "openScreen")
+	private void captureScreensDuringZipping(Screen screen, Operation<Void> original) {
+		if (!ZipFilesScreen.captureScreen(screen)) {
+			original.call(screen);
+		}
 	}
 }

@@ -10,6 +10,7 @@
   "mcsrfairplay.gui.zip_files.skip_zip": "Skip",
   "mcsrfairplay.gui.zip_files.open_directory": "Open Directory",
   "mcsrfairplay.gui.zip_files.zip_files": "Zip Files",
+  "mcsrfairplay.gui.zip_files.stopping_atum": "Stopping Atum...",
   "mcsrfairplay.gui.zip_files.zipping_files": "Zipping files...",
   "mcsrfairplay.gui.zip_files.finished_zipping": "Finished zipping files, press 'Open Directory' to get your file.",
   "mcsrfairplay.gui.zip_files.failed_zipping": "Something went wrong when zipping your files!",

@@ -14,6 +14,8 @@ public class MCSRFairplay implements ClientModInitializer, PreLaunchEntrypoint {
 	public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
 	public static final Path DIRECTORY = FabricLoader.getInstance().getGameDir().resolve("mcsrfairplay");
 
+	public static final boolean HAS_ATUM = FabricLoader.getInstance().isModLoaded("atum");
+
     @Override
 	public void onPreLaunch() {
 		ModHashing.init();
