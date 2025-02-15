@@ -27,6 +27,15 @@ dependencies {
 
 	// https://mvnrepository.com/artifact/net.java.dev.jna/jna-platform
 	shadow(implementation group: 'net.java.dev.jna', name: 'jna-platform', version: '5.15.0')
+
+	// SpeedrunAPI
+	// check for the latest versions at https://jitpack.io/#kingcontaria/speedrunapi
+	modImplementation "com.github.KingContaria:SpeedrunAPI:v1.2.1"
+
+	// check for the latest versions at https://jitpack.io/#kingcontaria/atum-rewrite
+	modImplementation ("com.github.KingContaria:atum-rewrite:v2.4") {
+		transitive = false
+	}
 }
 
 processResources {
