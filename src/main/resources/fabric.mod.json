@@ -12,6 +12,9 @@
 			}
 		}
 	],
+	"contributors": [
+		"contaria"
+	],
 	"license": "MIT",
 	"icon": "assets/mcsrfairplay/icon.png",
 	"environment": "client",
