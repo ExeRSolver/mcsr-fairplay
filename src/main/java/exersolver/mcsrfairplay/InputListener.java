@@ -17,6 +17,7 @@ import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.Window;
 
 import java.io.IOException;
@@ -136,6 +137,14 @@ public class InputListener implements NativeMouseInputListener, NativeMouseWheel
             return;
 
         fileWriter.log(time, String.format("cursor %s %d %d", locked ? "locked" : "unlocked", x, y));
+    }
+
+    public static void onKeyBindingChanged(String name, InputUtil.Key boundKey) {
+        long time = System.nanoTime();
+        if (fileWriter == null)
+            return;
+
+        fileWriter.log(time, String.format("keyBind %s:%s", name, boundKey.getTranslationKey()));
     }
 
     public static void onScreenChanged(Screen screen) {

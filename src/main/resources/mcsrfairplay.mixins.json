@@ -6,12 +6,13 @@
     "defaultRequire": 1
   },
   "client": [
-    "accessor.MinecraftClientAccessor",
     "ClientPlayerEntityMixin",
+    "KeyBindingMixin",
     "MinecraftClientMixin",
     "MouseMixin",
     "SaveLevelScreenMixin",
     "ScreenMixin",
-    "WindowMixin"
+    "WindowMixin",
+    "accessor.MinecraftClientAccessor"
   ]
 }
